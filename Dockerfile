@@ -29,14 +29,10 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copie le code source
+# Copie le code source (cela inclut DÉJÀ les dossiers templates et static)
 COPY src/ ./src/
 
-# Copie les templates et fichiers statiques
-COPY src/cloudtrim/api/templates/ ./src/cloudtrim/api/templates/
-COPY src/cloudtrim/api/static/ ./src/cloudtrim/api/static/ 2>/dev/null || true
-
-# Crée le dossier data et donne les permissions à appuser
+# Crée le dossier data et donne les permissions à l'utilisateur non-root
 RUN mkdir -p /app/data && chown -R appuser:appuser /app
 
 # Change vers l'utilisateur non-root
