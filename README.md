@@ -62,3 +62,68 @@ CloudTrim is a FinOps analysis engine that:
 │  - CUR ingestion                        │
 │  - SQL aggregations                     │
 └─────────────────────────────────────────┘
+
+
+**Tech Stack:**
+- **Backend**: Python 3.10+, FastAPI, Pydantic, DuckDB
+- **Frontend**: Jinja2, Chart.js, Bootstrap 5
+- **Testing & Quality**: pytest (30+ unit/integration tests), Ruff (linter), GitHub Actions (CI/CD)
+- **Deployment**: Docker, GitHub Container Registry (GHCR), Render
+
+---
+
+## 🛠️ Local Installation
+
+### Prerequisites
+- Python 3.10+
+- pip
+- Git
+
+### Setup
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/cdywolf/CloudTrim.git
+cd CloudTrim
+
+# 2. Create and activate a virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Linux/macOS
+# or
+.\.venv\Scripts\activate   # Windows
+
+# 3. Install dependencies
+pip install -e ".[dev]"
+
+# 4. Generate synthetic test data (simulates 30 days of AWS CUR)
+cloudtrim generate --days 30 --out data/sample_cur.csv
+
+# 5. Ingest data into the local DuckDB database
+cloudtrim ingest --csv data/sample_cur.csv --db data/cloudtrim.duckdb
+
+# 6. Run the CLI analysis to see text-based insights
+cloudtrim analyze --db data/cloudtrim.duckdb
+
+# 7. Start the local server (API + Dashboard)
+cloudtrim serve --db data/cloudtrim.duckdb
+
+
+---
+
+```markdown
+---
+
+## 🐳 Docker Deployment
+
+The project is fully containerized with a multi-stage, secure Dockerfile (running as a non-root user for best security practices).
+
+```bash
+# Build the image
+docker build -t cloudtrim:latest .
+
+# Run the container (mounts the local data folder to persist the database)
+docker run -p 8000:8000 -v ${PWD}/data:/app/data cloudtrim:latest
+
+
+---
+ 
