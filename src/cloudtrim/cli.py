@@ -26,15 +26,15 @@ def cmd_ingest(args: argparse.Namespace) -> None:
 
     print("\n=== Coût par service (top 5) ===")
     for row in repo.cost_by_product()[:5]:
-        print(f"  {row['product_name']}: {row['total_cost']:,.2f} $")
+        print(f"  {row['label']}: {row['total_cost']:,.2f} $")
 
     print("\n=== Coût par région ===")
     for row in repo.cost_by_region():
-        print(f"  {row['region']}: {row['total_cost']:,.2f} $")
+        print(f"  {row['label']}: {row['total_cost']:,.2f} $")
 
     print("\n=== Coût par équipe (top 5) ===")
     for row in repo.cost_by_team()[:5]:
-        print(f"  {row['team']}: {row['total_cost']:,.2f} $")
+        print(f"  {row['label']}: {row['total_cost']:,.2f} $")
 
     print("\n=== Évolution journalière (5 premiers jours) ===")
     for row in repo.daily_cost()[:5]:
