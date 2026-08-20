@@ -106,24 +106,3 @@ cloudtrim analyze --db data/cloudtrim.duckdb
 
 # 7. Start the local server (API + Dashboard)
 cloudtrim serve --db data/cloudtrim.duckdb
-
-
----
-
-```markdown
----
-
-## 🐳 Docker Deployment
-
-The project is fully containerized with a multi-stage, secure Dockerfile (running as a non-root user for best security practices).
-
-```bash
-# Build the image
-docker build -t cloudtrim:latest .
-
-# Run the container (mounts the local data folder to persist the database)
-docker run -p 8000:8000 -v ${PWD}/data:/app/data cloudtrim:latest
-
-
----
- 
