@@ -45,6 +45,7 @@ def cmd_ingest(args: argparse.Namespace) -> None:
 def cmd_serve(args: argparse.Namespace) -> None:
     """Lance le serveur API + dashboard."""
     import uvicorn
+
     from cloudtrim.api.dependencies import set_db_path
 
     set_db_path(args.db)

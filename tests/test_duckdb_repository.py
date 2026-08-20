@@ -6,8 +6,8 @@ des résultats cohérents avec les données générées.
 
 import pytest
 
-from cloudtrim.adapters.duckdb_repository import DuckDBRepository
 from cloudtrim.adapters.csv_writer import write_cur_csv
+from cloudtrim.adapters.duckdb_repository import DuckDBRepository
 from cloudtrim.domain.generator import generate_cur
 
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from cloudtrim.domain.ai_insights import generate_insight
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -20,6 +20,7 @@ from cloudtrim.api.schemas import (
     UntaggedWasteResponse,
     WasteEstimate,
 )
+from cloudtrim.domain.ai_insights import generate_insight
 from cloudtrim.domain.analyzer import (
     analyze_orphan_resources,
     analyze_untagged_resources,
@@ -183,13 +184,9 @@ def get_insight(resource_id: str, type: str):
         if resource_id not in all_costs:
             return {"error": "Ressource non trouvée"}
         daily_costs = all_costs[resource_id]
-        # Trouve le jour avec le coût max (l'anomalie)
-        max_day_idx = max(range(len(daily_costs)), key=lambda i: daily_costs[i][1])
-        anomaly_day, anomaly_cost = daily_costs[max_day_idx]
-        costs_only = [c for _, c in daily_costs]
-        from statistics import median
-        median_cost = median(costs_only)
+        # Détecte les anomalies pour cette ressource
         from cloudtrim.domain.analyzer import detect_cost_anomalies
+        
         anomalies = detect_cost_anomalies({resource_id: daily_costs})
         if not anomalies:
             return {"error": "Aucune anomalie détectée pour cette ressource"}

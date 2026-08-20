@@ -2,7 +2,7 @@
 
 import pytest
 
-from cloudtrim.domain.analyzer import Anomaly, detect_cost_anomalies
+from cloudtrim.domain.analyzer import detect_cost_anomalies
 
 
 def test_detects_obvious_anomaly():

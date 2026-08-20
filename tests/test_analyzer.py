@@ -3,7 +3,6 @@
 import pytest
 
 from cloudtrim.domain.analyzer import (
-    CostEstimate,
     analyze_orphan_resources,
     analyze_untagged_resources,
     estimate_savings,
