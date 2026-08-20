@@ -43,5 +43,5 @@ USER appuser
 # Expose le port
 EXPOSE 8000
 
-# Commande de démarrage avec le port dynamique de Render
-CMD uvicorn cloudtrim.api.app:app --host 0.0.0.0 --port ${PORT:-8000}
+# Au démarrage : si la base n'existe pas, génère et ingère des données de démo, puis lance le serveur
+CMD sh -c "if [ ! -f /app/data/cloudtrim.duckdb ]; then echo '🔄 Initialisation de la base de données avec des données de démo...' && cloudtrim generate --days 30 --out /app/data/sample_cur.csv && cloudtrim ingest --csv /app/data/sample_cur.csv --db /app/data/cloudtrim.duckdb; fi && uvicorn cloudtrim.api.app:app --host 0.0.0.0 --port ${PORT:-8000}"
