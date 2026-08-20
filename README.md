@@ -43,26 +43,6 @@ CloudTrim is a FinOps analysis engine that:
 
 ## 🏗️ Technical Architecture
 
-```text
-┌─────────────────────────────────────────┐
-│  Dashboard (Jinja2 + Chart.js)          │
-├─────────────────────────────────────────┤
-│  REST API (FastAPI)                     │
-│  - /api/costs/*                         │
-│  - /api/waste/*                         │
-│  - /api/anomalies                       │
-│  - /api/ai/insight                      │
-├─────────────────────────────────────────┤
-│  Analysis Engine (domain/)              │
-│  - Waste detection                      │
-│  - Anomaly detection                    │
-│  - Insight generation                   │
-├─────────────────────────────────────────┤
-│  Database (DuckDB)                      │
-│  - CUR ingestion                        │
-│  - SQL aggregations                     │
-└─────────────────────────────────────────┘
-
 
 **Tech Stack:**
 - **Backend**: Python 3.10+, FastAPI, Pydantic, DuckDB
@@ -106,3 +86,18 @@ cloudtrim analyze --db data/cloudtrim.duckdb
 
 # 7. Start the local server (API + Dashboard)
 cloudtrim serve --db data/cloudtrim.duckdb
+
+# Build the image
+docker build -t cloudtrim:latest .
+
+# Run the container (mounts the local data folder to persist the database)
+docker run -p 8000:8000 -v ${PWD}/data:/app/data cloudtrim:latest
+
+# Run all unit and integration tests
+pytest
+
+# Run tests with an HTML coverage report
+pytest --cov=src/cloudtrim --cov-report=html
+
+# Check code style and formatting
+ruff check src/ tests/
