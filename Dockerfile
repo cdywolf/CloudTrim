@@ -41,5 +41,5 @@ USER appuser
 # Expose le port
 EXPOSE 8000
 
-# Commande de démarrage
-CMD ["uvicorn", "cloudtrim.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Utilise la variable d'environnement PORT fournie par Render (avec 8000 par défaut en local)
+CMD uvicorn cloudtrim.api.app:app --host 0.0.0.0 --port ${PORT:-8000}
