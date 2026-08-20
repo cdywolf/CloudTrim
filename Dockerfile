@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copie les fichiers de dépendances
-COPY pyproject.toml .
+COPY pyproject.toml README.md .
 
 # Installe les dépendances dans un dossier virtuel
 RUN python -m venv /opt/venv
