@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - CloudTrim{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Tableau de bord FinOps</h1>
+
+<!-- Résumé global -->
+<div class="row mb-4" id="summary-cards">
+    <div class="col-md-3">
+        <div class="card metric-card">
+            <div class="card-body">
+                <div class="metric-label">Coût total</div>
+                <div class="metric-value" id="total-cost">-</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card metric-card" style="border-left-color: #e74c3c;">
+            <div class="card-body">
+                <div class="metric-label">Économies non taguées</div>
+                <div class="metric-value" id="untagged-savings">-</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card metric-card" style="border-left-color: #e67e22;">
+            <div class="card-body">
+                <div class="metric-label">Économies orphelines</div>
+                <div class="metric-value" id="orphan-savings">-</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card metric-card" style="border-left-color: #9b59b6;">
+            <div class="card-body">
+                <div class="metric-label">Anomalies détectées</div>
+                <div class="metric-value" id="anomalies-count">-</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Coûts par service</div>
+            <div class="card-body">
+                <canvas id="by-product-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Coûts par région</div>
+            <div class="card-body">
+                <canvas id="by-region-chart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">Évolution journalière des coûts</div>
+            <div class="card-body">
+                <canvas id="daily-chart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Anomalies -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Anomalies détectées</span>
+                <span class="badge bg-secondary">Cliquez sur 💡 pour une analyse IA</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Ressource</th>
+                                <th>Date</th>
+                                <th>Coût</th>
+                                <th>Médiane</th>
+                                <th>Z-score</th>
+                                <th>Sévérité</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="anomalies-table">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour les Insights IA -->
+<div class="modal fade" id="insightModal" tabindex="-1" aria-labelledby="insightModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="insightModalLabel">Analyse IA</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p id="insight-summary" class="lead text-primary fw-bold"></p>
+                <pre id="insight-details" class="bg-light p-3 rounded border" style="white-space: pre-wrap; font-family: inherit;"></pre>
+                <h6 class="mt-4 mb-2">✅ Actions recommandées :</h6>
+                <ul id="insight-actions" class="list-group list-group-flush">
+                    <!-- Les actions seront injectées ici -->
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Instance du modal Bootstrap
+let insightModalInstance = null;
+
+// Fonction pour afficher un insight
+async function showInsight(resourceId, type) {
+    try {
+        // Afficher un état de chargement
+        document.getElementById('insightModalLabel').textContent = "Chargement de l'analyse...";
+        document.getElementById('insight-summary').textContent = "";
+        document.getElementById('insight-details').textContent = "Veuillez patienter...";
+        document.getElementById('insight-actions').innerHTML = "";
+        
+        if (!insightModalInstance) {
+            insightModalInstance = new bootstrap.Modal(document.getElementById('insightModal'));
+        }
+        insightModalInstance.show();
+
+        // Appel API
+        const response = await fetch(`/api/ai/insight?resource_id=${encodeURIComponent(resourceId)}&type=${type}`);
+        const insight = await response.json();
+        
+        if (insight.error) {
+            document.getElementById('insightModalLabel').textContent = "Erreur";
+            document.getElementById('insight-summary').textContent = insight.error;
+            document.getElementById('insight-details').textContent = "";
+            return;
+        }
+
+        // Mise à jour du contenu du modal
+        document.getElementById('insightModalLabel').textContent = insight.title;
+        document.getElementById('insight-summary').textContent = insight.summary;
+        document.getElementById('insight-details').textContent = insight.details.join('\n');
+        
+        const actionsList = document.getElementById('insight-actions');
+        actionsList.innerHTML = '';
+        insight.actions.forEach(action => {
+            const li = document.createElement('li');
+            li.className = "list-group-item";
+            li.textContent = action;
+            actionsList.appendChild(li);
+        });
+
+    } catch (error) {
+        console.error("Erreur lors du chargement de l'insight:", error);
+        document.getElementById('insightModalLabel').textContent = "Erreur";
+        document.getElementById('insight-summary').textContent = "Impossible de charger l'explication pour le moment.";
+    }
+}
+
+// Charger les données depuis l'API
+async function loadDashboard() {
+    // Résumé
+    const summary = await fetch('/api/summary').then(r => r.json());
+    document.getElementById('total-cost').textContent = `$${summary.total_cost.toFixed(2)}`;
+    document.getElementById('untagged-savings').textContent = 
+        `$${summary.untagged_savings_lower.toFixed(2)} - $${summary.untagged_savings_upper.toFixed(2)}`;
+    document.getElementById('orphan-savings').textContent = 
+        `$${summary.orphan_savings_lower.toFixed(2)} - $${summary.orphan_savings_upper.toFixed(2)}`;
+    document.getElementById('anomalies-count').textContent = summary.anomalies_count;
+
+    // Coûts par service
+    const byProduct = await fetch('/api/costs/by-product').then(r => r.json());
+    new Chart(document.getElementById('by-product-chart'), {
+        type: 'bar',
+        data: {
+            labels: byProduct.map(d => d.label),
+            datasets: [{
+                label: 'Coût ($)',
+                data: byProduct.map(d => d.total_cost),
+                backgroundColor: '#3498db'
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: true }
+    });
+
+    // Coûts par région
+    const byRegion = await fetch('/api/costs/by-region').then(r => r.json());
+    new Chart(document.getElementById('by-region-chart'), {
+        type: 'pie',
+        data: {
+            labels: byRegion.map(d => d.label),
+            datasets: [{
+                data: byRegion.map(d => d.total_cost),
+                backgroundColor: ['#3498db', '#e74c3c', '#f39c12', '#2ecc71']
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: true }
+    });
+
+    // Évolution journalière
+    const daily = await fetch('/api/costs/daily').then(r => r.json());
+    new Chart(document.getElementById('daily-chart'), {
+        type: 'line',
+        data: {
+            labels: daily.map(d => d.day),
+            datasets: [{
+                label: 'Coût journalier ($)',
+                data: daily.map(d => d.daily_cost),
+                borderColor: '#3498db',
+                tension: 0.1,
+                fill: true,
+                backgroundColor: 'rgba(52, 152, 219, 0.1)'
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: true }
+    });
+
+    // Anomalies
+    const anomalies = await fetch('/api/anomalies').then(r => r.json());
+    const tbody = document.getElementById('anomalies-table');
+    tbody.innerHTML = ''; // Nettoyer au cas où
+    
+    if (anomalies.anomalies.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Aucune anomalie détectée. Excellent travail ! 🎉</td></tr>';
+    } else {
+        anomalies.anomalies.forEach(a => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td class="fw-bold">${a.resource_id}</td>
+                <td>${a.day}</td>
+                <td class="text-danger fw-bold">$${a.cost.toFixed(2)}</td>
+                <td>$${a.median_cost.toFixed(2)}</td>
+                <td>${a.z_score.toFixed(2)}</td>
+                <td><span class="badge ${a.severity === 'critical' ? 'bg-danger' : 'bg-warning text-dark'}">${a.severity.toUpperCase()}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="showInsight('${a.resource_id}', 'anomaly')">
+                        💡 Expliquer
+                    </button>
+                </td>
+            `;
+        });
+    }
+}
+
+// Lancer le chargement au démarrage
+document.addEventListener('DOMContentLoaded', loadDashboard);
+</script>
+{% endblock %}

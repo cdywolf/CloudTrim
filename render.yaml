@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: cloudtrim
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "true"
+      - key: PORT
+        value: "8000"
+    buildCommand: ""
+    startCommand: ""
+    autoDeploy: true

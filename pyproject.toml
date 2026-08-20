@@ -1,0 +1,40 @@
+[project]
+name = "cloudtrim"
+version = "0.1.0"
+description = "Un moteur d'optimisation de coûts cloud (FinOps) sur données AWS CUR."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Nonvignon Candy Aho" }]
+dependencies = [
+    "pydantic>=2.0",
+    "duckdb>=0.10",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "httpx>=0.27",
+]
+
+[project.scripts]
+cloudtrim = "cloudtrim.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cloudtrim"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
